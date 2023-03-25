@@ -1,3 +1,4 @@
 executormode/DependencyFactory.class
 executormode/App.class
-executormode/Handler.class
+executormode/S3ApiHandler.class
+executormode/UserInputOutputHandler.class

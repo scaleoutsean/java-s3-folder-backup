@@ -9,11 +9,10 @@ import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
-
-public class Handler {
+public class S3ApiHandler {
     private final S3Client s3Client;
 
-    public Handler() {
+    public S3ApiHandler() {
         s3Client = DependencyFactory.s3Client();
     }
 
