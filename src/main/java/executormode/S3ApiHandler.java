@@ -14,14 +14,13 @@ public class S3ApiHandler {
     private static final S3Client s3Client = DependencyFactory.s3Client();
     private static final String S3_UTIL_BUCKET = "backup-util-bucket"; // store into one bucket in S3
 
-    public static void uploadBlobToS3(String dirName, Blob dirBlob) {
+    public static void uploadBlobToS3(String dirName, byte[] binDir) {
         createBucket(s3Client, S3_UTIL_BUCKET);
-
         System.out.println("Uploading object...");
 
         try {
             s3Client.putObject(PutObjectRequest.builder().bucket(S3_UTIL_BUCKET).key(dirName)
-                            .build(), RequestBody.fromString("Testing with the {sdk-java}"));
+                            .build(), RequestBody.fromBytes(binDir));
             System.out.println(String.format("Upload of your folder '%s' completed successfully", dirName));
         } catch (Exception e) {
             System.out.println("We had trouble uploading your folder to S3. Try again");
@@ -62,9 +61,7 @@ public class S3ApiHandler {
                 .key(fileName)
                 .build();
 
-        InputStream in =  s3Client.getObject(getObjectRequest);
-        System.out.println(in.toString());
-        return in;
+        return s3Client.getObject(getObjectRequest);
     }
 
     public static void createBucket(S3Client s3Client, String bucketName) {
@@ -73,12 +70,9 @@ public class S3ApiHandler {
                     .builder()
                     .bucket(bucketName)
                     .build());
-            System.out.println("Creating bucket: " + bucketName);
             s3Client.waiter().waitUntilBucketExists(HeadBucketRequest.builder()
                     .bucket(bucketName)
                     .build());
-            System.out.println(bucketName + " is ready.");
-            System.out.printf("%n");
         } catch (S3Exception e) {}
     }
 }

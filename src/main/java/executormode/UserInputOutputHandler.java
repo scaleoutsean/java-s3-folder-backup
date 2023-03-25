@@ -6,8 +6,6 @@ import java.io.File;
 import javax.swing.JFileChooser;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.sql.Blob;
-import javax.sql.rowset.serial.SerialBlob;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -66,7 +64,6 @@ public class UserInputOutputHandler {
         // allow the user to only select directories and store the selected dir
         fileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        File selectedDir = fileChooser.getSelectedFile();
 
         // wait until user actually selects a file
         int result;
@@ -83,6 +80,7 @@ public class UserInputOutputHandler {
             }
         } while (result != JFileChooser.APPROVE_OPTION);
 
+        // actually returns the directory
         return fileChooser.getSelectedFile();
     }
 
@@ -106,9 +104,7 @@ public class UserInputOutputHandler {
 //            System.out.println(Arrays.toString(dirBinary));
 //            inputStream.close();
 
-            Blob dirBlob = new SerialBlob(dirBinary);
-
-            s3Handler.uploadBlobToS3(selectedDir.getName(), dirBlob);
+            s3Handler.uploadBlobToS3(selectedDir.getName(), dirBinary);
         } catch (Exception e) {
             System.out.println("We had trouble processing your folder. Try again");
         }
@@ -145,12 +141,13 @@ public class UserInputOutputHandler {
             return;
         }
 
-        System.out.println(selectedDir.getAbsolutePath());
-        System.out.println(contents.get(chosenIdx));
-
         // fetch the user-specified file from S
+        String userSpecifiedFile = contents.get(chosenIdx);
         try {
-            Files.copy(s3Handler.fetchObject(contents.get(chosenIdx)), Paths.get(selectedDir.getAbsolutePath()));
+            Files.copy(
+                    s3Handler.fetchObject(userSpecifiedFile),
+                    Paths.get(String.format("%s/%s", selectedDir.getAbsolutePath(), userSpecifiedFile))
+            );
         } catch (Exception e) {
             System.out.println("We had trouble processing the specified S3 file. Try again.");
             return;
