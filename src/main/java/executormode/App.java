@@ -4,25 +4,22 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Scanner;
 
+import executormode.UserInputOutputHandler;
+
+
 public class App {
     private static final Logger logger = LoggerFactory.getLogger(App.class);
+    private static UserInputOutputHandler IOHandler;
+    private static final String TERMINAL_PROMPT = "s3-helper: ";
 
     public static void main(String... args) {
-        String prompt = "=========================================================================\n" +
-                        "Welcome to the S3 backup utility!\n" +
-                        "To exit at any point in time, type 'exit', 'quit'\n" +
-                        "To upload a file to S3 backup, type 'b'\n" +
-                        "To restore a backup from S3, type 'r'\n" +
-                        "To repeat this prompt, type 'p'\n" +
-                        "=========================================================================";
-        System.out.println(prompt);
+
+        IOHandler.printWelcomePrompt();
 
         while (true) {
-            System.out.print("s3-helper: ");
-            Scanner dog = new Scanner(System.in);
-            System.out.println(dog.nextLine());
-//            S3ApiHandler s3Handler = new S3ApiHandler();
-//            s3Handler.sendRequest();
+            System.out.print(TERMINAL_PROMPT);
+            Scanner input = new Scanner(System.in);
+            IOHandler.handleTopLevelUserCommand(input.nextLine());
         }
     }
 }

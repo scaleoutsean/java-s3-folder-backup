@@ -9,36 +9,27 @@ import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
+
+import java.sql.Blob;
+import java.sql.SQLException;
+
 public class S3ApiHandler {
-    private final S3Client s3Client;
+    private static final S3Client s3Client = DependencyFactory.s3Client();
+    private static final String S3_UTIL_BUCKET = "backup-util-bucket"; // store into one bucket in S3
 
-    public S3ApiHandler() {
-        s3Client = DependencyFactory.s3Client();
-    }
-
-    public void sendRequest() {
-        String bucket = "bucket" + System.currentTimeMillis();
-        String key = "key";
-
-        createBucket(s3Client, bucket);
+    public static void uploadBlobToS3(String dirName, Blob dirBlob) {
+        createBucket(s3Client, S3_UTIL_BUCKET);
 
         System.out.println("Uploading object...");
 
-        s3Client.putObject(PutObjectRequest.builder().bucket(bucket).key(key)
-                        .build(),
-                RequestBody.fromString("Testing with the {sdk-java}"));
-
-        System.out.println("Upload complete");
-        System.out.printf("%n");
-
-        cleanUp(s3Client, bucket, key);
-
-        System.out.println("Closing the connection to {S3}");
-        s3Client.close();
-        System.out.println("Connection closed");
-        System.out.println("Exiting...");
+        try {
+            s3Client.putObject(PutObjectRequest.builder().bucket(S3_UTIL_BUCKET).key(dirName)
+                            .build(), RequestBody.fromString("Testing with the {sdk-java}"));
+            System.out.println(String.format("Upload of your folder '%s' completed successfully", dirName));
+        } catch (Exception e) {
+            System.out.println("We had trouble uploading your folder to S3. Try again");
+        }
     }
-
     public static void createBucket(S3Client s3Client, String bucketName) {
         try {
             s3Client.createBucket(CreateBucketRequest
@@ -51,29 +42,6 @@ public class S3ApiHandler {
                     .build());
             System.out.println(bucketName + " is ready.");
             System.out.printf("%n");
-        } catch (S3Exception e) {
-            System.err.println(e.awsErrorDetails().errorMessage());
-            System.exit(1);
-        }
-    }
-
-    public static void cleanUp(S3Client s3Client, String bucketName, String keyName) {
-        System.out.println("Cleaning up...");
-        try {
-            System.out.println("Deleting object: " + keyName);
-            DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder().bucket(bucketName).key(keyName).build();
-            s3Client.deleteObject(deleteObjectRequest);
-            System.out.println(keyName + " has been deleted.");
-            System.out.println("Deleting bucket: " + bucketName);
-            DeleteBucketRequest deleteBucketRequest = DeleteBucketRequest.builder().bucket(bucketName).build();
-            s3Client.deleteBucket(deleteBucketRequest);
-            System.out.println(bucketName + " has been deleted.");
-            System.out.printf("%n");
-        } catch (S3Exception e) {
-            System.err.println(e.awsErrorDetails().errorMessage());
-            System.exit(1);
-        }
-        System.out.println("Cleanup complete");
-        System.out.printf("%n");
+        } catch (S3Exception e) {}
     }
 }
