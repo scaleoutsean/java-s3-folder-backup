@@ -16,7 +16,6 @@ public class S3ApiHandler {
 
     public static void uploadBlobToS3(String dirName, byte[] binDir) {
         createBucket(s3Client, S3_UTIL_BUCKET);
-        System.out.println("Uploading object...");
 
         try {
             s3Client.putObject(PutObjectRequest.builder().bucket(S3_UTIL_BUCKET).key(dirName)

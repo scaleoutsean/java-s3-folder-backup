@@ -1,13 +1,15 @@
 package executormode;
 
-import software.amazon.awssdk.services.s3.model.S3Object;
-
-import java.io.File;
+import java.io.*;
 import javax.swing.JFileChooser;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Scanner;
+
+import net.lingala.zip4j.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
 
 public class UserInputOutputHandler {
     private static S3ApiHandler s3Handler;
@@ -85,25 +87,23 @@ public class UserInputOutputHandler {
     }
 
     public static void handleStoreRequest() {
-        System.out.println("Choose a directory to store in S3 (a pop-up window will open):");
+        System.out.println("Choose a directory to store in S3 (a pop-up window will open)");
         File selectedDir = selectDirUISequence();
         if (selectedDir == null) {
             return;
         }
 
-        // read the directory into a blob, then call s3 helper to actually upload
+        // change dir to zip, convert to blob, then call s3 helper to actually upload
         try {
-            byte[] dirBinary = new byte[(int) selectedDir.length()];
-//            System.out.println("a");
-//            System.out.println(Arrays.toString(dirBinary));
-//            FileInputStream inputStream = new FileInputStream(selectedDir);
-//            System.out.println("b");
-//            System.out.println(Arrays.toString(dirBinary));
-//            inputStream.read(dirBinary);
-//            System.out.println("c");
-//            System.out.println(Arrays.toString(dirBinary));
-//            inputStream.close();
+            ZipFile zipFile = new ZipFile(String.format("%s.zip", selectedDir.getName()));
+            zipFile.addFolder(new File(selectedDir.getAbsolutePath()));
+            File zipAsFile = zipFile.getFile();
+            byte[] dirBinary = new byte[(int) zipAsFile.length()];
+            FileInputStream fis = new FileInputStream(zipAsFile);
+            zipAsFile.delete();
+            fis.read(dirBinary);
 
+            System.out.println("Uploading object...");
             s3Handler.uploadBlobToS3(selectedDir.getName(), dirBinary);
         } catch (Exception e) {
             System.out.println("We had trouble processing your folder. Try again");
@@ -126,7 +126,7 @@ public class UserInputOutputHandler {
         try {
             chosenIdx = input.nextInt();
             if (chosenIdx < 0 || !contents.containsKey(chosenIdx)) {
-                throw new Exception();
+                throw new IllegalArgumentException();
             }
         } catch (Exception e) {
             System.out.println("Please choose a valid file index");
@@ -135,23 +135,25 @@ public class UserInputOutputHandler {
         }
 
         // select location to store file we get from S3
-        System.out.println("Choose a directory to store the recovered file (a pop-up window will open):");
+        System.out.println("Choose a directory to store the recovered file (a pop-up window will open)");
         File selectedDir = selectDirUISequence();
         if (selectedDir == null) {
             return;
         }
 
-        // fetch the user-specified file from S
+        // fetch the user-specified file (as zip) from specified path
         String userSpecifiedFile = contents.get(chosenIdx);
         try {
             Files.copy(
                     s3Handler.fetchObject(userSpecifiedFile),
-                    Paths.get(String.format("%s/%s", selectedDir.getAbsolutePath(), userSpecifiedFile))
+                    Paths.get(String.format("%s/%s.zip", selectedDir.getAbsolutePath(), userSpecifiedFile))
             );
         } catch (Exception e) {
             System.out.println("We had trouble processing the specified S3 file. Try again.");
             return;
         }
+
+        // convert zip into normal file
 
         System.out.println(String.format("Finished copying the blob into '%s'!", selectedDir.getAbsolutePath()));
     }
