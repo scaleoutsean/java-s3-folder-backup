@@ -1,21 +1,19 @@
 package executormode;
 
 import java.io.*;
-import javax.swing.JFileChooser;
+import javax.swing.*;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Scanner;
 
 import net.lingala.zip4j.ZipFile;
-import net.lingala.zip4j.exception.ZipException;
 
 public class UserInputOutputHandler {
-    private static S3ApiHandler s3Handler;
 
     private static final String WELCOME_PROMPT =
-                    "=========================================================================\n" +
+            "=========================================================================\n" +
                     "====================Welcome to the S3 backup utility!====================\n" +
                     "To upload a file to S3 backup, type 'b'\n" +
                     "To restore a backup from S3, type 'r'\n" +
@@ -31,6 +29,7 @@ public class UserInputOutputHandler {
     public static void printWelcomePrompt() {
         System.out.print(WELCOME_PROMPT);
     }
+    private static S3ApiHandler s3Handler;
 
     /**
      * Parses the user's top level command, which can be to store, recover,
@@ -40,7 +39,7 @@ public class UserInputOutputHandler {
      *
      * @param cmd string representing user's desired action
      */
-    public static void handleTopLevelUserCommand() {
+    public static void handleTopLevelUserCommand() throws InterruptedException, InvocationTargetException {
         System.out.print(TERMINAL_PROMPT);
         Scanner input = new Scanner(System.in);
         String cmd = input.nextLine().strip().toLowerCase();
@@ -57,37 +56,48 @@ public class UserInputOutputHandler {
         } else {
             System.out.println("Invalid input! To repeat the instructions prompt, press 'p'");
         }
-    };
-
-
-    public static File selectDirUISequence () {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.requestFocus();
-
-        // allow the user to only select directories and store the selected dir
-        fileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
-        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-
-        // wait until user actually selects a file
-        int result;
-        boolean firstTime = true;
-        do {
-            if (!firstTime) System.out.println("You need to specify a directory:");
-            firstTime = false;
-            result = fileChooser.showOpenDialog(null);
-
-            // if user cancels action, return
-            if (result == JFileChooser.CANCEL_OPTION) {
-                System.out.println("Action cancelled");
-                return null;
-            }
-        } while (result != JFileChooser.APPROVE_OPTION);
-
-        // actually returns the directory
-        return fileChooser.getSelectedFile();
     }
 
-    public static void handleStoreRequest() {
+    public static File selectDirUISequence() throws InterruptedException, InvocationTargetException {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
+        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+//        System.out.println(Arrays.toString(JFrame.getFrames()));
+
+        boolean[] exitedCorrectly = {false};
+        SwingUtilities.invokeAndWait(new Runnable()
+        {
+            public void run()
+            {
+                // allow the user to only select directories and store the selected dir
+
+                // wait until user actually selects a file
+                int result;
+                boolean firstTime = true;
+                do {
+                    if (!firstTime) System.out.println("You need to specify a directory:");
+                    firstTime = false;
+                    result = fileChooser.showOpenDialog(null);
+
+                    // if user cancels action, return
+                    if (result == JFileChooser.CANCEL_OPTION) {
+                        System.out.println("Action cancelled");
+                        return;
+                    }
+                } while (result != JFileChooser.APPROVE_OPTION);
+
+                exitedCorrectly[0] = true;
+            }
+        });
+
+        if (exitedCorrectly[0]) {
+            return fileChooser.getSelectedFile();
+        }
+
+        return null;
+    }
+
+    public static void handleStoreRequest() throws InterruptedException, InvocationTargetException {
         System.out.println("Choose a directory to store in S3 (a pop-up window will open)");
         File selectedDir = selectDirUISequence();
         if (selectedDir == null) {
@@ -111,7 +121,7 @@ public class UserInputOutputHandler {
         }
     };
 
-    public static void handleRecoverRequest() {
+    public static void handleRecoverRequest() throws InterruptedException, InvocationTargetException {
         // display all files in recovery bucket
         System.out.println("Please see the files in your bucket and type the number of the one you want to recover:");
         Map<Integer, String> contents = s3Handler.printS3BucketContents();
