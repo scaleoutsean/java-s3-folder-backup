@@ -32,4 +32,5 @@ I did this by making debug versions of the recover and store handlers inside `Us
 - `S3ApiHandler.java`: contains helpers to communicate with the S3 bucket created to support the utility's functions.
 - `UserInputOutputApiHandler.java`: contains helpers to process the users requests to either store in S3, recover from S3, print usage instructions, or exit
 - `UserInputOutputApiHandlerDebug.java`: contains helpers used in the test of the recover/store functionalities of the utility. Separated from the parent `UserInputOutputApiHandler.java` file to keep testing and "production" code separate
+- `AppTest.java`: contains a comprehensive JUnit test to validate the functionality of the recover/store features 
 
