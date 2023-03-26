@@ -15,12 +15,12 @@ public class UserInputOutputHandler {
     private static S3ApiHandler s3Handler;
 
     private static final String WELCOME_PROMPT =
-                    "\n=========================================================================\n" +
-                    "Welcome to the S3 backup utility!\n" +
+                    "=========================================================================\n" +
+                    "====================Welcome to the S3 backup utility!====================\n" +
                     "To upload a file to S3 backup, type 'b'\n" +
                     "To restore a backup from S3, type 'r'\n" +
                     "To repeat this prompt, type 'p'\n" +
-                    "To exit from the top level of the program, type 'exit', 'quit'\n" +
+                    "To exit from the top level of the program, type 'exit' or 'quit'\n" +
                     "=========================================================================\n";
     private static final String TERMINAL_PROMPT = "s3-helper: ";
     private static final String GOODBYE_PROMPT = "Thank you for using S3 backup utility!";
@@ -62,6 +62,7 @@ public class UserInputOutputHandler {
 
     public static File selectDirUISequence () {
         JFileChooser fileChooser = new JFileChooser();
+        fileChooser.requestFocus();
 
         // allow the user to only select directories and store the selected dir
         fileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
@@ -141,19 +142,24 @@ public class UserInputOutputHandler {
             return;
         }
 
-        // fetch the user-specified file (as zip) from specified path
+        // fetch the user-specified file (as zip) from specified path and expand it
         String userSpecifiedFile = contents.get(chosenIdx);
         try {
+            String recoveredFilePath = String.format("%s/%s.zip", selectedDir.getAbsolutePath(), userSpecifiedFile);
+
             Files.copy(
                     s3Handler.fetchObject(userSpecifiedFile),
-                    Paths.get(String.format("%s/%s.zip", selectedDir.getAbsolutePath(), userSpecifiedFile))
+                    Paths.get(recoveredFilePath)
             );
+
+            // get the zip we generated, expand it and delete the zip, only leaving the folder behind
+            ZipFile recoveredZip = new ZipFile(recoveredFilePath);
+            recoveredZip.extractAll(selectedDir.getAbsolutePath());
+            recoveredZip.getFile().delete();
         } catch (Exception e) {
             System.out.println("We had trouble processing the specified S3 file. Try again.");
             return;
         }
-
-        // convert zip into normal file
 
         System.out.println(String.format("Finished copying the blob into '%s'!", selectedDir.getAbsolutePath()));
     }
