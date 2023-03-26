@@ -58,19 +58,26 @@ public class UserInputOutputHandler {
         }
     }
 
+    /**
+     * Creates a JavaSwing GUI File dialogue for the user to select either which folder they
+     * want to backup into S3 or which folder they want to store a recovered S3 blob in
+     *
+     * @return the directory that the user specifies
+     * @throws InterruptedException
+     * @throws InvocationTargetException
+     */
     public static File selectDirUISequence() throws InterruptedException, InvocationTargetException {
         JFileChooser fileChooser = new JFileChooser();
+
+        // allow the user to only select directories
         fileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-//        System.out.println(Arrays.toString(JFrame.getFrames()));
 
         boolean[] exitedCorrectly = {false};
         SwingUtilities.invokeAndWait(new Runnable()
         {
             public void run()
             {
-                // allow the user to only select directories and store the selected dir
-
                 // wait until user actually selects a file
                 int result;
                 boolean firstTime = true;
@@ -97,6 +104,14 @@ public class UserInputOutputHandler {
         return null;
     }
 
+    /**
+     * Handles the user's request to store a folder in S3 by converting the folder to
+     * zip, converting the zip to a blob and sending to the utility's S3 bucket using
+     * a helper in the S3ApiHandler class
+     *
+     * @throws InterruptedException
+     * @throws InvocationTargetException
+     */
     public static void handleStoreRequest() throws InterruptedException, InvocationTargetException {
         System.out.println("Choose a directory to store in S3 (a pop-up window will open)");
         File selectedDir = selectDirUISequence();
@@ -121,6 +136,17 @@ public class UserInputOutputHandler {
         }
     };
 
+    /**
+     * Handles the user's request to recover a backup stored in the utility's S3 bucket
+     * by displaying the files stored in the user's S3 bucket and prompting the user to
+     * select the one they want to recover. The function also prompts the user to specify
+     * the directory in which they want to store their recovered backup. The function
+     * proceeds by fetching the specified file from S3, converting it from a blob to a zip
+     * file, and then extracting that zip file and deleting it
+     *
+     * @throws InterruptedException
+     * @throws InvocationTargetException
+     */
     public static void handleRecoverRequest() throws InterruptedException, InvocationTargetException {
         // display all files in recovery bucket
         System.out.println("Please see the files in your bucket and type the number of the one you want to recover:");
