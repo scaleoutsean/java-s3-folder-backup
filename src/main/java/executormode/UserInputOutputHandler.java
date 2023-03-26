@@ -23,13 +23,14 @@ public class UserInputOutputHandler {
     private static final String TERMINAL_PROMPT = "s3-helper: ";
     private static final String GOODBYE_PROMPT = "Thank you for using S3 backup utility!";
 
+    private static S3ApiHandler s3Handler;
+
     /**
      * Prints the instructions on how to use the utility
      */
     public static void printWelcomePrompt() {
         System.out.print(WELCOME_PROMPT);
     }
-    private static S3ApiHandler s3Handler;
 
     /**
      * Parses the user's top level command, which can be to store, recover,
@@ -121,6 +122,7 @@ public class UserInputOutputHandler {
 
         // change dir to zip, convert to blob, then call s3 helper to actually upload
         try {
+            System.out.println("Processing object...");
             ZipFile zipFile = new ZipFile(String.format("%s.zip", selectedDir.getName()));
             zipFile.addFolder(new File(selectedDir.getAbsolutePath()));
             File zipAsFile = zipFile.getFile();
