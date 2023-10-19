@@ -60,3 +60,7 @@ I did this by making debug versions of the recover and store handlers inside `Us
 - `UserInputOutputApiHandlerDebug.java`: contains helpers used in the test of the recover/store functionalities of the utility. Separated from the parent `UserInputOutputApiHandler.java` file to keep testing and "production" code separate
 - `AppTest.java`: contains a comprehensive JUnit test to validate the functionality of the recover/store features 
 
+## LICENSE
+
+The upstream repository has no license information as of October 19, 2023.
+
