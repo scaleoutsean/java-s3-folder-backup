@@ -15,7 +15,7 @@ public class UserInputOutputHandler {
     private static final String WELCOME_PROMPT =
             "=========================================================================\n" +
                     "====================Welcome to the S3 backup utility!====================\n" +
-                    "To upload a file to S3 backup, type 'b'\n" +
+                    "To upload a file or folder to S3 backup, type 'b'\n" +
                     "To restore a backup from S3, type 'r'\n" +
                     "To repeat this prompt, type 'p'\n" +
                     "To exit from the top level of the program, type 'exit' or 'quit'\n" +

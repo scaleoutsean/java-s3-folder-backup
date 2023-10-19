@@ -16,6 +16,7 @@ public class App {
      * @throws InvocationTargetException
      */
     public static void main(String[] args) throws InterruptedException, InvocationTargetException {
+
         UserInputOutputHandler.printWelcomePrompt();
 
         while (true) {

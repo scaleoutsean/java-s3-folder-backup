@@ -11,7 +11,7 @@ import software.amazon.awssdk.services.s3.model.*;
 
 public class S3ApiHandler {
     private static final S3Client s3Client = DependencyFactory.s3Client();
-    private static final String S3_UTIL_BUCKET = "backup-util-bucket"; // store into one bucket in S3
+    private static final String S3_UTIL_BUCKET = "native"; // store into one bucket in S3
 
     /**
      * Uploads a blob to the utility's designated S3 bucket
@@ -23,7 +23,7 @@ public class S3ApiHandler {
         createBucket(s3Client, S3_UTIL_BUCKET);
 
         try {
-            s3Client.putObject(PutObjectRequest.builder().bucket(S3_UTIL_BUCKET).key(dirName)
+            s3Client.putObject(PutObjectRequest.builder().bucket(S3_UTIL_BUCKET).key(dirName + ".zip")
                             .build(), RequestBody.fromBytes(binDir));
             System.out.println(String.format("Upload of your folder '%s' completed successfully", dirName));
         } catch (Exception e) {
@@ -62,7 +62,7 @@ public class S3ApiHandler {
 
             return res;
         } catch (Exception e) {
-            System.out.println("We had trouble reading the backup bucket contents, try again");
+            System.out.println("We had trouble reading the backup bucket contents. Permissions issue?");
             return null;
         }
     }
